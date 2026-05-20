@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResumeIQ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="app-shell container">
+        <section class="intro section">
+            <p class="eyebrow">AI Resume Analyzer</p>
+            <h1>ResumeIQ</h1>
+            <p class="lead">Upload one resume for a dashboard report, or add a second PDF to compare both resumes side by side.</p>
+        </section>
+
+        <section class="workspace section">
+            <form class="upload-panel" id="analyze-form" enctype="multipart/form-data">
+                <label class="field-label" for="resume">Resume PDF</label>
+                <label class="file-drop" for="resume">
+                    <span id="file-name">Choose primary resume</span>
+                    <small>Required PDF, maximum file size: 8 MB</small>
+                </label>
+                <input id="resume" name="resume" type="file" accept=".pdf" required>
+
+                <label class="field-label" for="compare_resume">Compare Resume</label>
+                <label class="file-drop compact" for="compare_resume">
+                    <span id="compare-file-name">Add second resume</span>
+                    <small>Optional side-by-side comparison</small>
+                </label>
+                <input id="compare_resume" name="compare_resume" type="file" accept=".pdf">
+
+                <label class="field-label" for="job_role">Target Job Role</label>
+                <input id="job_role" name="job_role" type="text" list="job-role-suggestions" placeholder="Example: Data Analyst" autocomplete="off" required>
+                <datalist id="job-role-suggestions">
+                    <option value="Data Analyst"></option>
+                    <option value="Python Developer"></option>
+                    <option value="Frontend Developer"></option>
+                    <option value="Backend Developer"></option>
+                    <option value="Full Stack Developer"></option>
+                    <option value="AI Engineer"></option>
+                    <option value="Machine Learning Engineer"></option>
+                    <option value="Flutter Developer"></option>
+                    <option value="UI/UX Designer"></option>
+                    <option value="DevOps Engineer"></option>
+                </datalist>
+
+                <button type="submit" id="analyze-button">
+                    <span class="button-text">Analyze Resume</span>
+                    <span class="button-loader"></span>
+                </button>
+
+                <p class="error hidden" id="error-message"></p>
+            </form>
+        </section>
+
+        <section class="results-panel has-results section hidden" id="report-area">
+            <div class="results-header">
+                <div>
+                    <p class="eyebrow">Analysis Dashboard</p>
+                    <h2>Resume Report</h2>
+                </div>
+
+                <button class="export-button" type="button" id="export-report">Export PDF</button>
+            </div>
+
+            <section class="summary-bar fade-in" id="summary-bar"></section>
+
+            <div class="results-content">
+                <div class="reports-layout fade-in" id="reports-layout"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
