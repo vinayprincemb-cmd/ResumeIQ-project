@@ -30,21 +30,18 @@ AI-powered resume analyzer built using Flask and Gemini AI.
 
 ## Screenshots
 
-### Dashboard
 
-![Dashboard](screenshots/1.dashboard.png)
+### Dashboard
+![Dashboard](./utils/screenshots/1.dashboard.png)
 
 ### ATS Analysis
-
-![ATS Analysis](screenshots/2.analysis.png)
+![ATS Analysis](./utils/screenshots/2.analysis.png)
 
 ### PDF Export
-
-![PDF Export](screenshots/3.pdf-report.png)
+![PDF Export](./utils/screenshots/3.pdf-report.png)
 
 ### Resume Comparison
-
-![Comparison](screenshots/4.comparison.png)
+![Comparison](./utils/screenshots/4.comparison.png)
 
 ---
 
