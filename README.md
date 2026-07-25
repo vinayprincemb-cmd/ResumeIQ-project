@@ -1,4 +1,4 @@
-# ResumeIQ
+# ResumeIQ+
 
 AI-powered resume analyzer built using Flask and Gemini AI.
 

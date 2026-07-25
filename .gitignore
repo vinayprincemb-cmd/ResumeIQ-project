@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 uploads/*
 !uploads/.gitkeep
+resumeiq.sqlite3
+server.*.log

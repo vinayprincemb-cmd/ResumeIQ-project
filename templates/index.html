@@ -3,74 +3,1045 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ResumeIQ</title>
+    <title>ResumeIQ+ | The Complete AI Career Platform</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <main class="app-shell container">
-        <section class="intro section">
-            <p class="eyebrow">AI Resume Analyzer</p>
-            <h1>ResumeIQ</h1>
-            <p class="lead">Upload one resume for a dashboard report, or add a second PDF to compare both resumes side by side.</p>
-        </section>
-
-        <section class="workspace section">
-            <form class="upload-panel" id="analyze-form" enctype="multipart/form-data">
-                <label class="field-label" for="resume">Resume PDF</label>
-                <label class="file-drop" for="resume">
-                    <span id="file-name">Choose primary resume</span>
-                    <small>Required PDF, maximum file size: 8 MB</small>
-                </label>
-                <input id="resume" name="resume" type="file" accept=".pdf" required>
-
-                <label class="field-label" for="compare_resume">Compare Resume</label>
-                <label class="file-drop compact" for="compare_resume">
-                    <span id="compare-file-name">Add second resume</span>
-                    <small>Optional side-by-side comparison</small>
-                </label>
-                <input id="compare_resume" name="compare_resume" type="file" accept=".pdf">
-
-                <label class="field-label" for="job_role">Target Job Role</label>
-                <input id="job_role" name="job_role" type="text" list="job-role-suggestions" placeholder="Example: Data Analyst" autocomplete="off" required>
-                <datalist id="job-role-suggestions">
-                    <option value="Data Analyst"></option>
-                    <option value="Python Developer"></option>
-                    <option value="Frontend Developer"></option>
-                    <option value="Backend Developer"></option>
-                    <option value="Full Stack Developer"></option>
-                    <option value="AI Engineer"></option>
-                    <option value="Machine Learning Engineer"></option>
-                    <option value="Flutter Developer"></option>
-                    <option value="UI/UX Designer"></option>
-                    <option value="DevOps Engineer"></option>
-                </datalist>
-
-                <button type="submit" id="analyze-button">
-                    <span class="button-text">Analyze Resume</span>
-                    <span class="button-loader"></span>
-                </button>
-
-                <p class="error hidden" id="error-message"></p>
+    <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+    {% if auth_mode %}
+    <main class="auth-shell">
+        <section class="auth-card" data-auth-mode="{{ auth_mode }}">
+            <a class="brand auth-card-brand" href="/login"><span>RIQ+</span><strong>ResumeIQ+</strong></a>
+            <p class="auth-subtitle">The Complete AI Career Platform</p>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="auth-flashes" aria-live="polite">
+                {% for category, message in messages %}
+                <p class="form-error flash-{{ category }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+            <form class="auth-form {% if auth_mode != 'login' %}hidden{% endif %}" id="login-form" action="/auth/login" method="post" novalidate>
+                <label>Email<input type="email" name="email" autocomplete="email" required></label>
+                <label>Password<div class="password-field"><input type="password" name="password" autocomplete="current-password" required><button type="button" data-password-toggle>Show</button></div></label>
+                <label class="check-row"><input type="checkbox" name="remember"> Remember me</label>
+                <button class="primary-button" type="submit">Login</button>
+                <p><a href="/forgot-password">Forgot password?</a> <a href="/signup">Create account</a></p>
             </form>
-        </section>
-
-        <section class="results-panel has-results section hidden" id="report-area">
-            <div class="results-header">
-                <div>
-                    <p class="eyebrow">Analysis Dashboard</p>
-                    <h2>Resume Report</h2>
-                </div>
-
-                <button class="export-button" type="button" id="export-report">Export PDF</button>
-            </div>
-
-            <section class="summary-bar fade-in" id="summary-bar"></section>
-
-            <div class="results-content">
-                <div class="reports-layout fade-in" id="reports-layout"></div>
-            </div>
+            <form class="auth-form {% if auth_mode != 'signup' %}hidden{% endif %}" id="signup-form" action="/auth/signup" method="post" novalidate>
+                <h2>Create Your Account</h2>
+                <label>Full Name<input type="text" name="full_name" autocomplete="name" required></label>
+                <label>Email<input type="email" name="email" autocomplete="email" required></label>
+                <label>Password<div class="password-field"><input type="password" name="password" autocomplete="new-password" required><button type="button" data-password-toggle>Show</button></div></label>
+                <label>Confirm Password<div class="password-field"><input type="password" name="confirm_password" autocomplete="new-password" required><button type="button" data-password-toggle>Show</button></div></label>
+                <button class="primary-button" type="submit">Create Account</button>
+                <p>Already have an account? <a href="/login">Login</a></p>
+            </form>
+            <form class="auth-form {% if auth_mode != 'forgot' %}hidden{% endif %}" id="forgot-form" action="/auth/forgot-password" method="post" novalidate>
+                <h2>Forgot Password</h2>
+                <label>Email<input type="email" name="email" autocomplete="email" required></label>
+                <button class="primary-button" type="submit">Send Reset Link</button>
+                <p><a href="/login">Back to login</a></p>
+            </form>
+            <form class="auth-form {% if auth_mode != 'reset' %}hidden{% endif %}" id="reset-form" action="/auth/reset-password" method="post" novalidate>
+                <h2>Reset Password</h2>
+                <label>New Password<div class="password-field"><input type="password" name="password" autocomplete="new-password" required><button type="button" data-password-toggle>Show</button></div></label>
+                <button class="primary-button" type="submit">Reset Password</button>
+                <p><a href="/login">Back to login</a></p>
+            </form>
+            <form class="auth-form {% if auth_mode != 'verify' %}hidden{% endif %}" id="verify-form" action="/auth/verify-email" method="post" novalidate>
+                <h2>Verify Email</h2>
+                <p class="lead">Email verification is ready for production delivery. In this local app, request a verification event here.</p>
+                <button class="primary-button" type="submit">Request Verification</button>
+                <p><a href="/login">Back to login</a></p>
+            </form>
+            <p class="form-error hidden" id="auth-error"></p>
         </section>
     </main>
+    {% else %}
+    <div class="app-frame {% if not auth_user %}public-frame{% endif %}" data-authenticated="{{ 'true' if auth_user else 'false' }}" data-user-id="{{ auth_user.id if auth_user else '' }}" data-initial-view="{{ initial_view or 'home' }}">
+        <aside class="sidebar" id="sidebar">
+            <a class="brand" href="#home" data-view-link="home">
+                <span>RIQ+</span>
+                <div>
+                    <strong>ResumeIQ+</strong>
+                    <small>The Complete AI Career Platform</small>
+                </div>
+            </a>
+            <nav class="nav-list" aria-label="Primary">
+                {% if auth_user %}
+                <a href="#home" data-view-link="home" data-icon="H" class="active"><span>Home</span></a>
+                <a href="#dashboard" data-view-link="dashboard" data-icon="D"><span>Dashboard</span></a>
+                <a href="#analyzer" data-view-link="analyzer" data-icon="A"><span>Analyzer</span></a>
+                <a href="#builder" data-view-link="builder" data-icon="B"><span>Resume Builder</span></a>
+                <a href="#builder" data-view-link="builder" data-builder-jump="templates" data-icon="T"><span>Templates</span></a>
+                <a href="#interview" data-view-link="interview" data-icon="I"><span>AI Interview Coach</span></a>
+                <a href="#interview-history" data-view-link="interview-history" data-icon="R"><span>Interview History</span></a>
+                <a href="#jobs" data-view-link="jobs" data-icon="J"><span>Job Tracker</span></a>
+                <a href="#profile" data-view-link="profile" data-icon="P"><span>Profile</span></a>
+                <a href="#settings" data-view-link="settings" data-icon="S"><span>Settings</span></a>
+                {% if auth_user and auth_user.is_admin %}
+                <a href="#admin" data-view-link="admin" data-icon="M"><span>Admin</span></a>
+                {% endif %}
+                {% else %}
+                <a href="#home" data-icon="H" class="active"><span>Home</span></a>
+                <a href="#features" data-icon="F"><span>Features</span></a>
+                <a href="#templates" data-icon="T"><span>Templates</span></a>
+                <a href="/login" data-icon="L"><span>Login</span></a>
+                <a href="/signup" data-icon="+"><span>Signup</span></a>
+                {% endif %}
+            </nav>
+            {% if auth_user %}
+            <div class="profile-mini">
+                <div class="avatar" id="mini-profile-avatar">{{ auth_user.full_name[:2]|upper }}</div>
+                <div>
+                    <strong id="mini-profile-name">{{ auth_user.full_name }}</strong>
+                    <span>Career workspace</span>
+                </div>
+            </div>
+            {% endif %}
+        </aside>
+        <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+        <main class="main-shell">
+            <header class="topbar">
+                <button class="icon-button menu-button" type="button" id="menu-toggle" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="false"><span></span><span></span><span></span></button>
+                {% if auth_user %}
+                <div>
+                    <p class="eyebrow">Premium AI Career Suite</p>
+                    <h1 id="page-title">Build, analyze, and interview with confidence</h1>
+                </div>
+                <div class="profile-menu" id="profile-menu">
+                    <button class="profile-menu-trigger" type="button" id="profile-menu-trigger" aria-expanded="false" aria-controls="profile-menu-dropdown">
+                        <span class="avatar" id="profile-menu-avatar">{{ auth_user.full_name[:2]|upper }}</span>
+                        <span class="profile-menu-identity"><strong id="profile-menu-name">{{ auth_user.full_name }}</strong><small id="profile-menu-email">{{ auth_user.email }}</small></span>
+                    </button>
+                    <div class="profile-menu-dropdown" id="profile-menu-dropdown">
+                        <a href="#profile" data-profile-view="profile">👤 My Profile</a>
+                        <a href="#dashboard" data-profile-view="dashboard">📊 Dashboard</a>
+                        <a href="#builder" data-profile-view="builder">📄 My Resumes</a>
+                        <a href="#interview-history" data-profile-view="interview-history">🎤 Interview History</a>
+                        <a href="#settings" data-profile-view="settings">⚙ Settings</a>
+                        <button type="button" id="profile-theme-toggle">🌙 Light / Dark Theme</button>
+                        <a href="#faq" data-profile-view="home">❓ Help &amp; Support</a>
+                        <a class="profile-menu-logout" href="/logout">🚪 Logout</a>
+                    </div>
+                </div>
+                {% else %}
+                <div>
+                    <p class="eyebrow">The Complete AI Career Platform</p>
+                    <h1 id="page-title">ResumeIQ+ for modern job readiness</h1>
+                </div>
+                <div class="button-row public-auth-actions">
+                    <a class="secondary-link compact-inline" href="/login">Login</a>
+                    <a class="primary-link compact-inline" href="/signup">Signup</a>
+                </div>
+                {% endif %}
+            </header>
+
+            <section class="view active landing-page" id="view-home" data-title="ResumeIQ+ | The Complete AI Career Platform">
+                <div class="hero landing-hero reveal-on-scroll">
+                    <div class="hero-copy">
+                        <p class="hero-badge"><span>RIQ+</span> ResumeIQ+ &bull; The Complete AI Career Platform</p>
+                        <h2>Build Resumes.<br>Master Interviews.<br>Get Hired.</h2>
+                        <p class="hero-kicker">Powered by AI Resume Analysis, Smart Resume Builder, Technical Interviews, HR Preparation, Aptitude Practice &amp; Career Intelligence.</p>
+                        <p class="lead">ResumeIQ+ helps students and professionals create ATS-friendly resumes, prepare for technical, HR and aptitude interviews, receive intelligent AI feedback, and confidently move toward their dream career, all from one powerful platform.</p>
+                        <div class="hero-actions">
+                            {% if auth_user %}
+                            <a class="primary-link action-ripple" href="#builder" data-view-link="builder"><span class="action-icon">+</span>Build Resume</a>
+                            <a class="primary-link action-ripple" href="#interview" data-view-link="interview"><span class="action-icon">mic</span>Start AI Interview</a>
+                            <a class="secondary-link action-ripple" href="#analyzer" data-view-link="analyzer"><span class="action-icon">doc</span>Analyze Resume</a>
+                            <a class="secondary-link action-ripple" href="#dashboard" data-view-link="dashboard"><span class="action-icon">bar</span>Career Dashboard</a>
+                            {% else %}
+                            <a class="primary-link action-ripple" href="/signup"><span class="action-icon">+</span>Start Free</a>
+                            <a class="secondary-link action-ripple" href="/login"><span class="action-icon">in</span>Login</a>
+                            {% endif %}
+                        </div>
+                        <div class="feature-chip-row">
+                            <span>ATS Resume Builder</span>
+                            <span>AI Resume Analyzer</span>
+                            <span>AI Interview Coach</span>
+                            <span>Aptitude Practice</span>
+                            <span>Voice Interview</span>
+                            <span>Resume Templates</span>
+                            <span>Smart Dashboard</span>
+                            <span>Career Analytics</span>
+                            <span>AI Reports</span>
+                            <span>PDF &amp; DOCX Export</span>
+                        </div>
+                    </div>
+                    <div class="hero-visual" aria-label="ResumeIQ+ product preview">
+                        <div class="floating-card float-one">ATS Optimized</div>
+                        <div class="floating-card float-two">AI Powered</div>
+                        <div class="floating-card float-three">Interview Ready</div>
+                        <section class="product-preview">
+                            <div class="preview-toolbar">
+                                <span></span><span></span><span></span>
+                                <strong>Career Intelligence</strong>
+                            </div>
+                            <div class="score-strip">
+                                <article>
+                                    <span>Resume Score</span>
+                                    <strong id="hero-score">0%</strong>
+                                </article>
+                            </div>
+                            <div class="progress-track hero-progress"><div id="hero-score-bar"></div></div>
+                            <div class="preview-grid">
+                                <div class="preview-chart">
+                                    <i style="--bar: 62%"></i>
+                                    <i style="--bar: 82%"></i>
+                                    <i style="--bar: 70%"></i>
+                                    <i style="--bar: 94%"></i>
+                                    <i style="--bar: 76%"></i>
+                                </div>
+                                <div class="preview-list">
+                                    <span>Resume Templates</span>
+                                    <span>AI Suggestions</span>
+                                    <span>Interview Report</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <section class="final-cta reveal-on-scroll">
+                    <p class="eyebrow">Start with ResumeIQ+</p>
+                    <h2>Ready to Build Your Dream Career?</h2>
+                    <div class="hero-actions">
+                        {% if auth_user %}
+                        <a class="primary-link action-ripple" href="#builder" data-view-link="builder">Build Resume</a>
+                        <a class="secondary-link action-ripple" href="#interview" data-view-link="interview">Start AI Interview</a>
+                        <a class="secondary-link action-ripple" href="#analyzer" data-view-link="analyzer">Analyze Resume</a>
+                        {% else %}
+                        <a class="primary-link action-ripple" href="/signup">Build Resume</a>
+                        <a class="secondary-link action-ripple" href="/signup">Start AI Interview</a>
+                        <a class="secondary-link action-ripple" href="/signup">Analyze Resume</a>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <div class="card-grid three app-stat-grid reveal-on-scroll">
+                    <article class="metric-card">
+                        <span>Total analyses</span>
+                        <strong id="stat-total">0</strong>
+                    </article>
+                    <article class="metric-card">
+                        <span>Average ATS</span>
+                        <strong id="stat-average">0%</strong>
+                    </article>
+                    <article class="metric-card">
+                        <span>Best score</span>
+                        <strong id="stat-best">0%</strong>
+                    </article>
+                </div>
+
+                <section class="landing-section reveal-on-scroll" id="features">
+                    <div class="section-header">
+                        <div>
+                            <p class="eyebrow">Built for career momentum</p>
+                            <h2>One platform for every serious applicant.</h2>
+                        </div>
+                    </div>
+                    <div class="audience-grid">
+                        <article><strong>Students</strong><p>Build a polished first resume and prepare for placements.</p></article>
+                        <article><strong>Freshers</strong><p>Translate projects, internships, and skills into recruiter-ready proof.</p></article>
+                        <article><strong>Software Engineers</strong><p>Practice technical rounds and sharpen role-specific keywords.</p></article>
+                        <article><strong>Data Analysts</strong><p>Showcase tools, dashboards, metrics, and business impact clearly.</p></article>
+                        <article><strong>Cyber Security Aspirants</strong><p>Organize labs, certifications, and security projects for ATS scans.</p></article>
+                        <article><strong>AI Engineers</strong><p>Present models, systems, research, and deployment impact with confidence.</p></article>
+                    </div>
+                </section>
+
+                <section class="landing-section split-section reveal-on-scroll">
+                    <div>
+                        <p class="eyebrow">How ResumeIQ+ works</p>
+                        <h2>A connected workflow from blank page to interview-ready.</h2>
+                    </div>
+                    <div class="workflow">
+                        <article><span>01</span><strong>Build Resume</strong></article>
+                        <article><span>02</span><strong>Analyze Resume</strong></article>
+                        <article><span>03</span><strong>Improve ATS Score</strong></article>
+                        <article><span>04</span><strong>Practice AI Interview</strong></article>
+                        <article><span>05</span><strong>Download Reports</strong></article>
+                        <article><span>06</span><strong>Get Interview Ready</strong></article>
+                    </div>
+                </section>
+
+                <section class="landing-section reveal-on-scroll" id="templates">
+                    <div class="section-header">
+                        <div>
+                            <p class="eyebrow">Why ResumeIQ+</p>
+                            <h2>Premium tools for modern job readiness.</h2>
+                        </div>
+                    </div>
+                    <div class="why-grid">
+                        <article><strong>ATS Resume Builder</strong><p>Create clean, structured resumes built for parsing and review.</p></article>
+                        <article><strong>Professional Resume Templates</strong><p>Choose layouts for developers, students, executives, and analysts.</p></article>
+                        <article><strong>AI Resume Analysis</strong><p>Receive instant feedback on scores, formatting, keywords, and gaps.</p></article>
+                        <article><strong>AI Interview Coach</strong><p>Practice technical, HR, behavioral, voice, and mixed interview rounds.</p></article>
+                        <article><strong>Aptitude Practice</strong><p>Train on placement-style quantitative, logical, verbal, and DI questions.</p></article>
+                        <article><strong>Career Dashboard</strong><p>Track progress, reports, analytics, interviews, and resume versions.</p></article>
+                    </div>
+                </section>
+
+                <section class="landing-section reveal-on-scroll">
+                    <div class="section-header">
+                        <div>
+                            <p class="eyebrow">Template preview</p>
+                            <h2>Resume formats that look sharp and stay ATS friendly.</h2>
+                        </div>
+                        {% if auth_user %}
+                        <a class="secondary-link compact-inline" href="#builder" data-view-link="builder" data-builder-jump="templates">Open Templates</a>
+                        {% else %}
+                        <a class="secondary-link compact-inline" href="/signup">Use Templates</a>
+                        {% endif %}
+                    </div>
+                    <div class="template-showcase">
+                        <article><div class="template-preview-lines"></div><strong>Modern</strong><div><a href="{{ '#builder' if auth_user else '/signup' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Preview</a><a href="{{ '#builder' if auth_user else '/signup' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Use Template</a></div></article>
+                        <article><div class="template-preview-lines minimal"></div><strong>Professional</strong><div><a href="{{ '#builder' if auth_user else '/signup' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Preview</a><a href="{{ '#builder' if auth_user else '/signup' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Use Template</a></div></article>
+                        <article><div class="template-preview-lines developer"></div><strong>Developer</strong><div><a href="{{ '#builder' if auth_user else '/signup' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Preview</a><a href="{{ '#builder' if auth_user else '/signup' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Use Template</a></div></article>
+                        <article><div class="template-preview-lines executive"></div><strong>Executive</strong><div><a href="{{ '#builder' if auth_user else '/signup' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Preview</a><a href="{{ '#builder' if auth_user else '/signup' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Use Template</a></div></article>
+                    </div>
+                </section>
+
+                <section class="landing-section split-section reveal-on-scroll">
+                    <div>
+                        <p class="eyebrow">Recruiter benefits</p>
+                        <h2>Why recruiters love ATS-friendly resumes.</h2>
+                        <p class="lead">Clear structure, role keywords, readable formatting, and focused achievements make every resume easier to scan.</p>
+                    </div>
+                    <div class="benefit-list">
+                        <span>Professional Formatting</span>
+                        <span>Keyword Optimization</span>
+                        <span>Readable Layout</span>
+                        <span>ATS Compatibility</span>
+                        <span>AI Suggestions</span>
+                    </div>
+                </section>
+
+                <footer class="landing-footer reveal-on-scroll">
+                    <div>
+                        <strong>ResumeIQ+</strong>
+                        <span>The Complete AI Career Platform</span>
+                    </div>
+                    <nav aria-label="Footer">
+                        <a href="{{ '#builder' if auth_user else '#home' }}" {% if auth_user %}data-view-link="builder"{% endif %}>Quick Links</a>
+                        <a href="#features">Features</a>
+                        <a href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
+                        <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
+                        <a href="{{ '#settings' if auth_user else '#home' }}" {% if auth_user %}data-view-link="settings"{% endif %}>Privacy</a>
+                        <a href="{{ '#settings' if auth_user else '#home' }}" {% if auth_user %}data-view-link="settings"{% endif %}>Terms</a>
+                    </nav>
+                    <small>Copyright 2026 ResumeIQ+. All rights reserved.</small>
+                </footer>
+            </section>
+
+            {% if auth_user %}
+            <section class="view" id="view-dashboard" data-title="Dashboard overview">
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">Command center</p>
+                        <h2>Dashboard</h2>
+                    </div>
+                    <button class="compact-button" type="button" id="refresh-dashboard">Refresh</button>
+                </div>
+
+                <section class="welcome-band">
+                    <div>
+                        <p class="eyebrow">Welcome back</p>
+                        <h2 id="welcome-name">Vinay, your career workspace is ready.</h2>
+                        <p class="lead">Keep improving your resume quality, ATS alignment, and interview readiness with a focused weekly routine.</p>
+                    </div>
+                    <div class="profile-ring">
+                        <strong id="profile-completion">72%</strong>
+                        <span>Profile completion</span>
+                    </div>
+                </section>
+
+                <div class="card-grid four dashboard-metrics">
+                    <article class="insight-card accent-card">
+                        <span>Resume Score</span>
+                        <strong id="dashboard-health">Getting started</strong>
+                        <p id="dashboard-health-copy">Upload a resume to unlock quality signals.</p>
+                    </article>
+                    <article class="insight-card">
+                        <span>ATS Score</span>
+                        <strong id="dashboard-ats">0%</strong>
+                        <p>Average score across saved analyses.</p>
+                    </article>
+                    <article class="insight-card">
+                        <span>Interview Readiness</span>
+                        <strong id="dashboard-interview">0%</strong>
+                        <p>Average score from AI coach sessions.</p>
+                    </article>
+                    <article class="insight-card dashboard-extra">
+                        <span>Grammar Score</span>
+                        <strong id="dashboard-grammar">84%</strong>
+                        <p>Estimated from resume structure and AI writing usage.</p>
+                    </article>
+                </div>
+
+                <div class="dashboard-grid dashboard-extra">
+                    <section class="panel">
+                        <div class="section-header tight">
+                            <h3>Score Trend</h3>
+                            <span>ATS + Interview</span>
+                        </div>
+                        <div class="chart-bars" id="score-trend"></div>
+                    </section>
+                    <section class="panel">
+                        <div class="section-header tight">
+                            <h3>Skill Distribution</h3>
+                            <span>Profile signals</span>
+                        </div>
+                        <div class="skill-chart">
+                            <div style="--size: 86%"><span>AI</span></div>
+                            <div style="--size: 72%"><span>Backend</span></div>
+                            <div style="--size: 64%"><span>Frontend</span></div>
+                            <div style="--size: 58%"><span>Product</span></div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="dashboard-grid">
+                    <section class="panel">
+                        <div class="section-header tight">
+                            <h3>Recent Resume</h3>
+                            <span id="recent-resume-count">0 versions</span>
+                        </div>
+                        <div class="recent-list" id="recent-resume-list"></div>
+                    </section>
+                    <section class="panel">
+                        <div class="section-header tight">
+                            <h3>Recent Activity</h3>
+                            <span id="recent-count">0 items</span>
+                        </div>
+                        <div class="recent-list" id="recent-list"></div>
+                    </section>
+                </div>
+
+                <div class="dashboard-grid">
+                    <section class="panel">
+                        <h3>Quick Actions</h3>
+                        <div class="quick-actions">
+                            <a class="secondary-link" href="#builder" data-view-link="builder">Build Resume</a>
+                            <a class="secondary-link" href="#analyzer" data-view-link="analyzer">Analyze Resume</a>
+                            <a class="secondary-link" href="#interview" data-view-link="interview">AI Interview Coach</a>
+                            <a class="secondary-link" href="#interview" data-view-link="interview">Aptitude Test</a>
+                            <a class="secondary-link" href="#interview-history" data-view-link="interview-history">Interview History</a>
+                            <a class="secondary-link" href="#jobs" data-view-link="jobs">Job Tracker</a>
+                            <a class="secondary-link" href="#profile" data-view-link="profile">Profile</a>
+                        </div>
+                    </section>
+                    <section class="panel">
+                        <h3>Upcoming Suggestions</h3>
+                        <ul class="clean-list">
+                            <li>Add quantified achievements to your strongest project.</li>
+                            <li>Refresh role keywords before each application.</li>
+                            <li>Practice one mixed interview after every resume revision.</li>
+                        </ul>
+                    </section>
+                </div>
+
+                <div class="dashboard-grid dashboard-extra">
+                    <section class="panel dashboard-extra">
+                        <div class="section-header tight">
+                            <h3>Interview Analytics</h3>
+                            <span>Total <strong id="dashboard-total-interviews">0</strong></span>
+                        </div>
+                        <div class="card-grid three compact-metrics">
+                            <article class="metric-card"><span>Total Interviews</span><strong id="analytics-total-interviews">0</strong></article>
+                            <article class="metric-card"><span>Average Interview Score</span><strong id="analytics-average-interview">0%</strong></article>
+                            <article class="metric-card"><span>Best Interview Score</span><strong id="analytics-best-interview">0%</strong></article>
+                            <article class="metric-card"><span>Total Aptitude Tests</span><strong id="analytics-total-aptitude">0</strong></article>
+                            <article class="metric-card"><span>Average Aptitude Score</span><strong id="analytics-average-aptitude">0%</strong></article>
+                        </div>
+                    </section>
+                    <section class="panel">
+                        <div class="section-header tight">
+                            <h3>Interview Trends</h3>
+                            <span>Technical + Communication</span>
+                        </div>
+                        <div class="trend-lines" id="interview-trends"></div>
+                    </section>
+                </div>
+
+                <section class="panel">
+                    <div class="section-header tight">
+                        <h3>Recent Interviews</h3>
+                        <a class="secondary-link compact-inline" href="#interview-history" data-view-link="interview-history">Open History</a>
+                    </div>
+                    <div class="recent-list" id="dashboard-recent-interviews"></div>
+                </section>
+                <section class="panel">
+                    <div class="section-header tight">
+                        <h3>Recent Aptitude Tests</h3>
+                        <span>MCQ practice</span>
+                    </div>
+                    <div class="recent-list" id="dashboard-recent-aptitude"></div>
+                </section>
+            </section>
+
+            <section class="view" id="view-analyzer" data-title="AI resume analyzer">
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">PDF analyzer</p>
+                        <h2>Analyze or compare resumes</h2>
+                    </div>
+                    <button class="compact-button" type="button" id="export-report">Export Report</button>
+                </div>
+                <form class="panel form-grid" id="analyze-form" enctype="multipart/form-data">
+                    <label>
+                        <span>Resume PDF</span>
+                        <input id="resume" name="resume" type="file" accept=".pdf" required>
+                        <small id="file-name">Required PDF, max 8 MB</small>
+                    </label>
+                    <label>
+                        <span>Compare Resume</span>
+                        <input id="compare_resume" name="compare_resume" type="file" accept=".pdf">
+                        <small id="compare-file-name">Optional PDF comparison</small>
+                    </label>
+                    <label class="wide-field">
+                        <span>Target Job Role</span>
+                        <input id="job_role" name="job_role" type="text" list="job-role-suggestions" placeholder="Example: Full Stack AI Engineer" autocomplete="off" required>
+                    </label>
+                    <datalist id="job-role-suggestions">
+                        <option value="Data Analyst"></option>
+                        <option value="Python Developer"></option>
+                        <option value="Frontend Developer"></option>
+                        <option value="Full Stack Developer"></option>
+                        <option value="AI Engineer"></option>
+                        <option value="Machine Learning Engineer"></option>
+                    </datalist>
+                    <button class="primary-button wide-field" type="submit" id="analyze-button">
+                        <span class="button-text">Analyze Resume</span>
+                        <span class="button-loader"></span>
+                    </button>
+                    <p class="error hidden wide-field" id="error-message"></p>
+                </form>
+                <section class="results-panel hidden" id="report-area">
+                    <div class="summary-bar" id="summary-bar"></div>
+                    <div class="reports-layout" id="reports-layout"></div>
+                </section>
+            </section>
+
+            <section class="view" id="view-builder" data-title="AI resume builder">
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">Create from scratch</p>
+                        <h2>AI Resume Builder</h2>
+                    </div>
+                    <div class="button-row">
+                        <button class="compact-button" type="button" id="save-draft">Auto save on</button>
+                        <button class="compact-button" type="button" id="download-docx">Download DOCX</button>
+                        <button class="compact-button" type="button" id="download-resume">Download PDF</button>
+                    </div>
+                </div>
+                <div class="wizard-steps" aria-label="Resume builder progress">
+                    <button class="active" type="button" data-builder-tab="profile">Profile</button>
+                    <button type="button" data-builder-tab="content">Content</button>
+                    <button type="button" data-builder-tab="templates">Templates</button>
+                    <button type="button" data-builder-tab="design">Design</button>
+                    <button type="button" data-builder-tab="export">Export</button>
+                </div>
+                <form class="builder-layout" id="builder-form">
+                    <section class="panel builder-main">
+                        <div class="form-grid builder-tab-panel active" data-builder-panel="profile">
+                            <label>
+                                <span>Full name</span>
+                                <input name="full_name" type="text" placeholder="Your name">
+                            </label>
+                            <label>
+                                <span>Email</span>
+                                <input name="email" type="email" placeholder="name@email.com">
+                            </label>
+                            <label>
+                                <span>Phone</span>
+                                <input name="phone" type="text" placeholder="+91 00000 00000">
+                            </label>
+                            <label>
+                                <span>Location</span>
+                                <input name="location" type="text" placeholder="City, Country">
+                            </label>
+                            <label>
+                                <span>Photo upload</span>
+                                <input name="photo" type="file" accept="image/*">
+                            </label>
+                            <label>
+                                <span>LinkedIn</span>
+                                <input name="linkedin" type="url" placeholder="https://linkedin.com/in/...">
+                            </label>
+                            <label>
+                                <span>Portfolio</span>
+                                <input name="portfolio" type="url" placeholder="https://...">
+                            </label>
+                            <label class="wide-field">
+                                <span>Target role</span>
+                                <input name="target_role" type="text" placeholder="Example: AI Engineer">
+                            </label>
+                        </div>
+                        <div class="form-grid builder-tab-panel hidden" data-builder-panel="design">
+                            <label>
+                                <span>Template</span>
+                                <select name="template" id="template-select"></select>
+                            </label>
+                            <label>
+                                <span>Font</span>
+                                <select name="font">
+                                    <option>Inter</option>
+                                    <option>Helvetica</option>
+                                    <option>Georgia</option>
+                                    <option>Times New Roman</option>
+                                    <option>Calibri</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>Accent color</span>
+                                <input name="accent_color" type="color" value="#24c6a8">
+                            </label>
+                            <label>
+                                <span>Color theme</span>
+                                <select name="color_theme" id="color-theme-select">
+                                    <option value="#0f766e">Teal</option>
+                                    <option value="#2563eb">Blue</option>
+                                    <option value="#111827">Charcoal</option>
+                                    <option value="#7c3aed">Violet</option>
+                                    <option value="#b45309">Amber</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>Layout</span>
+                                <select name="layout">
+                                    <option value="one">One Column</option>
+                                    <option value="two">Two Column</option>
+                                </select>
+                            </label>
+                            <label class="inline-check">
+                                <input name="show_photo" type="checkbox">
+                                <span>Profile Photo</span>
+                            </label>
+                        </div>
+                        <div class="builder-tab-panel hidden" data-builder-panel="templates">
+                            <div class="section-header tight">
+                                <h3>Template Gallery</h3>
+                                <span>Preview and switch instantly</span>
+                            </div>
+                            <div class="template-gallery" id="template-gallery"></div>
+                        </div>
+                        <div class="builder-tab-panel hidden" data-builder-panel="content">
+                            <div class="section-header tight">
+                                <h3>Resume Sections</h3>
+                                <span>Move sections up or down to reorder the resume</span>
+                            </div>
+                            <div id="builder-sections"></div>
+                        </div>
+                        <div class="builder-tab-panel hidden" data-builder-panel="export">
+                            <div class="section-header tight">
+                                <h3>Export Resume</h3>
+                                <span>Download the current autosaved draft</span>
+                            </div>
+                            <div class="button-row">
+                                <button class="compact-button" type="button" id="export-tab-docx">Download DOCX</button>
+                                <button class="primary-button" type="button" id="export-tab-pdf">Download PDF</button>
+                            </div>
+                        </div>
+                        <p class="error hidden" id="builder-error"></p>
+                    </section>
+                    <aside class="builder-side">
+                        <section class="panel ai-panel">
+                            <h3>AI writing tools</h3>
+                            <p>Choose a section, add draft content, then improve it with Gemini.</p>
+                            <label>
+                                <span>Section</span>
+                                <select id="ai-section"></select>
+                            </label>
+                            <div class="ai-actions">
+                                <button type="button" data-ai-action="Generate professional summary">Summary</button>
+                                <button type="button" data-ai-action="Improve bullet points">Bullets</button>
+                                <button type="button" data-ai-action="Suggest achievements">Achievements</button>
+                                <button type="button" data-ai-action="Improve grammar">Grammar</button>
+                                <button type="button" data-ai-action="Generate ATS-friendly content">ATS Content</button>
+                            </div>
+                            <div class="ai-output hidden" id="ai-output"></div>
+                        </section>
+                        <section class="panel live-preview">
+                            <div class="section-header tight">
+                                <h3>Live Preview</h3>
+                                <span id="preview-template">Executive</span>
+                            </div>
+                            <div class="resume-preview" id="resume-preview">
+                                <strong>Your Name</strong>
+                                <span>Target role</span>
+                                <p>Resume sections will preview here as you type.</p>
+                            </div>
+                        </section>
+                    </aside>
+                </form>
+            </section>
+
+            <section class="view" id="view-interview" data-title="AI interview coach">
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">AI Interview Coach</p>
+                        <h2>Practice, answer, and get evaluated</h2>
+                    </div>
+                    <button class="compact-button" type="button" id="download-interview-report">Download Report</button>
+                </div>
+
+                <div class="interview-grid">
+                    <form class="panel form-grid" id="interview-setup-form">
+                        <label>
+                            <span>Candidate Name</span>
+                            <input name="candidate_name" type="text" placeholder="Your name">
+                        </label>
+                        <label>
+                            <span>Job Role</span>
+                            <select name="job_role" id="interview-job-role">
+                                <option>Software Engineer</option>
+                                <option>Python Developer</option>
+                                <option>Data Analyst</option>
+                                <option>Data Scientist</option>
+                                <option>Full Stack Developer</option>
+                                <option>AI Engineer</option>
+                                <option>Java Developer</option>
+                                <option>SQL Developer</option>
+                                <option>React Developer</option>
+                                <option>Cloud Engineer</option>
+                                <option>Cyber Security Analyst</option>
+                                <option>Custom</option>
+                            </select>
+                        </label>
+                        <label class="hidden" id="custom-role-field">
+                            <span>Custom Role</span>
+                            <input name="custom_job_role" type="text" placeholder="Example: DevOps Engineer">
+                        </label>
+                        <label>
+                            <span>Experience Level</span>
+                            <select name="experience_level">
+                                <option>Fresher</option>
+                                <option>1-2 Years</option>
+                                <option>3-5 Years</option>
+                                <option>5+ Years</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Difficulty</span>
+                            <select name="difficulty">
+                                <option>Easy</option>
+                                <option selected>Medium</option>
+                                <option>Hard</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Interview Type</span>
+                            <select name="interview_type">
+                                <option>Technical</option>
+                                <option>HR</option>
+                                <option>Behavioral</option>
+                                <option selected>Mixed</option>
+                                <option>Aptitude Test</option>
+                            </select>
+                        </label>
+                        <label class="hidden" id="aptitude-category-field">
+                            <span>Aptitude Category</span>
+                            <select name="aptitude_category">
+                                <option>Quantitative Aptitude</option>
+                                <option>Logical Reasoning</option>
+                                <option>Verbal Ability</option>
+                                <option>Data Interpretation</option>
+                                <option>Analytical Reasoning</option>
+                                <option selected>Mixed</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Number of Questions</span>
+                            <select name="question_count">
+                                <option>5</option>
+                                <option>10</option>
+                                <option>15</option>
+                                <option>20</option>
+                            </select>
+                        </label>
+                        <label class="wide-field">
+                            <span>Custom Focus</span>
+                            <textarea name="custom_focus" placeholder="Optional: system design, Python, leadership, salary negotiation..."></textarea>
+                        </label>
+                        <button class="primary-button wide-field" type="submit" id="start-interview">Start Interview</button>
+                        <p class="error hidden wide-field" id="interview-error"></p>
+                    </form>
+
+                    <section class="panel interview-history">
+                        <div class="section-header tight">
+                            <h3>Interview History</h3>
+                            <span id="interview-history-count">0 sessions</span>
+                        </div>
+                        <div class="recent-list" id="interview-history-list"></div>
+                        <div class="achievement-row">
+                            <span>First Practice</span>
+                            <span>Consistency</span>
+                            <span>80+ Score</span>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="panel interview-session hidden" id="interview-session">
+                    <div class="section-header tight">
+                        <div>
+                            <h3 id="interview-question-label">Question 1</h3>
+                            <span id="interview-competency">Competency</span>
+                        </div>
+                        <strong id="interview-timer">00:00</strong>
+                    </div>
+                    <div class="progress-track"><div id="interview-progress"></div></div>
+                    <div class="question-meta-grid" id="interview-question-meta"></div>
+                    <p class="question-text" id="interview-question-text"></p>
+                    <div class="interview-stats-grid" id="interview-stats-grid"></div>
+                    <div class="voice-status hidden" id="voice-status">
+                        <span class="mic-dot"></span>
+                        <strong id="voice-status-text">Microphone ready</strong>
+                        <div class="waveform" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                    </div>
+                    <textarea id="interview-answer" spellcheck="true" placeholder="Type your answer here. Use STAR structure for behavioral answers."></textarea>
+                    <section class="answer-writing-assistant" id="answer-writing-assistant" aria-live="polite">
+                        <div class="answer-quality-indicators" id="answer-quality-indicators"></div>
+                        <p class="answer-writing-suggestion" id="answer-writing-suggestion">Start typing for grammar, clarity, and answer-quality guidance.</p>
+                    </section>
+                    <section class="review-panel hidden" id="interview-review-panel"></section>
+                    <section class="answer-feedback hidden" id="answer-feedback"></section>
+                    <div class="button-row">
+                        <button class="secondary-link" type="button" id="prev-question">Previous</button>
+                        <button class="secondary-link" type="button" id="bookmark-question">Bookmark</button>
+                        <button class="secondary-link" type="button" id="voice-answer">Start Recording</button>
+                        <button class="secondary-link hidden" type="button" id="pause-voice">Pause</button>
+                        <button class="secondary-link hidden" type="button" id="resume-voice">Resume</button>
+                        <button class="secondary-link hidden" type="button" id="stop-voice">Stop</button>
+                        <button class="secondary-link" type="button" id="skip-question">Skip</button>
+                        <button class="compact-button" type="button" id="next-question">Next</button>
+                        <button class="compact-button" type="button" id="review-interview">Review</button>
+                        <button class="primary-button" type="button" id="finish-interview">Finish Interview</button>
+                    </div>
+                </section>
+
+                <section class="panel interview-session hidden" id="aptitude-session">
+                    <div class="section-header tight">
+                        <div>
+                            <h3 id="aptitude-question-label">Question 1</h3>
+                            <span id="aptitude-meta">Aptitude Test</span>
+                        </div>
+                        <strong id="aptitude-timer">00:00</strong>
+                    </div>
+                    <div class="progress-track"><div id="aptitude-progress"></div></div>
+                    <div class="question-meta-grid" id="aptitude-question-meta"></div>
+                    <p class="question-text" id="aptitude-question-text"></p>
+                    <div class="aptitude-options" id="aptitude-options"></div>
+                    <div class="button-row">
+                        <button class="secondary-link" type="button" id="prev-aptitude-question">Previous</button>
+                        <button class="secondary-link" type="button" id="skip-aptitude-question">Skip</button>
+                        <button class="compact-button" type="button" id="next-aptitude-question">Next</button>
+                        <button class="primary-button" type="button" id="finish-aptitude">Finish Aptitude Test</button>
+                    </div>
+                </section>
+
+                <section class="results-panel hidden" id="interview-report-area">
+                    <div class="summary-bar" id="interview-summary"></div>
+                    <div class="reports-layout" id="interview-report"></div>
+                </section>
+            </section>
+
+            <section class="view" id="view-interview-history" data-title="Interview history">
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">Saved sessions</p>
+                        <h2>Interview History</h2>
+                    </div>
+                    <button class="compact-button" type="button" id="refresh-interview-history">Refresh</button>
+                </div>
+                <div class="dashboard-grid">
+                    <section class="panel">
+                        <div class="section-header tight">
+                            <h3>Previous Interviews</h3>
+                            <span id="history-page-count">0 sessions</span>
+                        </div>
+                        <div class="history-list" id="history-page-list"></div>
+                    </section>
+                    <section class="panel">
+                        <div class="section-header tight">
+                            <h3>Compare Scores</h3>
+                            <span>Recent sessions</span>
+                        </div>
+                        <div class="comparison-chart" id="interview-comparison-chart"></div>
+                    </section>
+                </div>
+                <section class="results-panel hidden" id="history-report-preview">
+                    <div class="summary-bar" id="history-report-summary"></div>
+                    <div class="reports-layout" id="history-report-content"></div>
+                </section>
+            </section>
+
+            <section class="view" id="view-profile" data-title="User profile">
+                <section class="panel profile-panel">
+                    <div class="avatar large">VP</div>
+                    <div>
+                        <p class="eyebrow">Profile</p>
+                        <h2 id="profile-name">Vinay Prince</h2>
+                        <p class="lead" id="profile-goal">Manage your career workspace, resume history, and AI-assisted practice from ResumeIQ+.</p>
+                    </div>
+                </section>
+                <div class="card-grid four">
+                    <article class="metric-card"><span>Email</span><strong id="profile-email">-</strong></article>
+                    <article class="metric-card"><span>Resume Count</span><strong id="profile-resume-count">0</strong></article>
+                    <article class="metric-card"><span>Interview Count</span><strong id="profile-interview-count">0</strong></article>
+                    <article class="metric-card"><span>Avg Interview</span><strong id="profile-interview-score">0%</strong></article>
+                </div>
+                <section class="panel">
+                    <h3>Skills</h3>
+                    <div class="chip-list" id="profile-skills"></div>
+                </section>
+                <section class="panel">
+                    <div class="section-header tight">
+                        <h3>Edit Profile</h3>
+                        <button class="compact-button" type="submit" form="profile-form">Save Profile</button>
+                    </div>
+                    <form class="form-grid profile-edit-form" id="profile-form">
+                        <label>Profile Picture URL<input name="profile_picture" type="url"></label>
+                        <label>Upload Profile Picture<input id="profile-image-input" name="profile_image" type="file" accept="image/png,image/jpeg,image/gif,image/webp"></label>
+                        <label>Full Name<input name="full_name" type="text"></label>
+                        <label>Email<input name="email" type="email"></label>
+                        <label>Phone<input name="phone" type="tel"></label>
+                        <label>LinkedIn<input name="linkedin" type="url"></label>
+                        <label>GitHub<input name="github" type="url"></label>
+                        <label>Portfolio Website<input name="portfolio" type="url"></label>
+                        <label>Location<input name="location" type="text"></label>
+                        <label>College<input name="college" type="text"></label>
+                        <label>University<input name="university" type="text"></label>
+                        <label>Branch<input name="branch" type="text"></label>
+                        <label>Graduation Year<input name="graduation_year" type="text"></label>
+                        <label>Experience<input name="experience" type="text"></label>
+                        <label>Career Goal<input name="career_goal" type="text"></label>
+                        <label class="span-2">Skills<textarea name="skills" rows="3"></textarea></label>
+                        <label class="span-2">Bio<textarea name="bio" rows="4"></textarea></label>
+                    </form>
+                </section>
+            </section>
+
+            <section class="view" id="view-settings" data-title="Settings">
+                <section class="panel">
+                    <div class="section-header tight">
+                        <h2>Onboarding</h2>
+                        <button class="compact-button" type="submit" form="onboarding-form">Complete</button>
+                    </div>
+                    <form class="form-grid" id="onboarding-form">
+                        <label>Current Status<select name="current_status"><option>Student</option><option>Fresher</option><option>Working Professional</option></select></label>
+                        <label>Preferred Role<input name="preferred_role" type="text"></label>
+                        <label>Experience<input name="experience" type="text"></label>
+                        <label>Primary Skills<textarea name="primary_skills" rows="3"></textarea></label>
+                        <label class="span-2">Career Goal<textarea name="career_goal" rows="3"></textarea></label>
+                    </form>
+                </section>
+                <section class="panel settings-list">
+                    <h2>Settings</h2>
+                    <label class="setting-row">
+                        <span>Theme</span>
+                        <select id="theme-select">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </label>
+                    <label class="setting-row">
+                        <span>Accent Color</span>
+                        <input id="accent-picker" type="color" value="#24c6a8">
+                    </label>
+                    <label class="setting-row">
+                        <span>Accent Theme</span>
+                        <select id="accent-theme-select">
+                            <option value="#10b981">Emerald</option>
+                            <option value="#2563eb">Blue</option>
+                            <option value="#7c3aed">Purple</option>
+                            <option value="#ea580c">Orange</option>
+                            <option value="#0f766e">Teal</option>
+                            <option value="#dc2626">Red</option>
+                        </select>
+                    </label>
+                    <label class="setting-row">
+                        <span>Notifications</span>
+                        <select id="notification-select">
+                            <option>Enabled</option>
+                            <option>Weekly summary only</option>
+                            <option>Disabled</option>
+                        </select>
+                    </label>
+                    <div class="setting-row">
+                        <span>Gemini API Settings</span>
+                        <small>Configured through <code>.env</code> as <code>GEMINI_API_KEY</code>.</small>
+                    </div>
+                    <div class="setting-row">
+                        <span>Account Settings</span>
+                        <small>User account mode. SQLite stores user-owned analyses, resume versions, and interview sessions.</small>
+                    </div>
+                    <div class="setting-row">
+                        <span>Upload Policy</span>
+                        <small>PDF only, 8 MB limit, file signature validation enabled.</small>
+                    </div>
+                </section>
+                <section class="panel">
+                    <div class="section-header tight">
+                        <h2>Resume Library</h2>
+                        <div class="search-row"><input id="resume-search" type="search" placeholder="Search resumes"><button class="compact-button" type="button" id="refresh-resumes">Search</button></div>
+                    </div>
+                    <div class="history-list" id="resume-library-list"></div>
+                </section>
+                <section class="panel">
+                    <div class="section-header tight">
+                        <h2>Global Search</h2>
+                        <div class="search-row"><input id="global-search-input" type="search" placeholder="Search resumes, templates, reports, interviews"><button class="compact-button" type="button" id="global-search-button">Search</button></div>
+                    </div>
+                    <div class="history-list" id="global-search-results"></div>
+                </section>
+                <section class="panel">
+                    <h2>Notifications</h2>
+                    <div class="recent-list" id="notification-list"></div>
+                </section>
+            </section>
+            <section class="view" id="view-jobs" data-title="Job tracker">
+                <div class="section-header"><div><p class="eyebrow">Career pipeline</p><h2>Job Tracker</h2></div></div>
+                <div class="dashboard-grid">
+                    <form class="panel form-grid" id="job-form">
+                        <label><span>Company</span><input name="company" required maxlength="160" placeholder="Company name"></label>
+                        <label><span>Role</span><input name="role" required maxlength="160" placeholder="Target role"></label>
+                        <label><span>Status</span><select name="status"><option>Wishlist</option><option>Applied</option><option>Assessment</option><option>Interview</option><option>Offer</option><option>Rejected</option></select></label>
+                        <label class="wide-field"><span>Notes</span><textarea name="notes" rows="4" maxlength="4000" placeholder="Contacts, dates, follow-up reminders, or preparation notes"></textarea></label>
+                        <button class="primary-button" type="submit">Add to tracker</button>
+                    </form>
+                    <section class="panel"><div class="section-header tight"><h3>Applications</h3><button class="compact-button" id="refresh-jobs" type="button">Refresh</button></div><div class="job-board" id="job-board"></div></section>
+                </div>
+            </section>
+            {% if auth_user and auth_user.is_admin %}
+            <section class="view" id="view-admin" data-title="Hidden admin dashboard">
+                <section class="panel">
+                    <div class="section-header">
+                        <div>
+                            <p class="eyebrow">Hidden Admin</p>
+                            <h2>Users, analytics, templates, question bank, API usage, and announcements.</h2>
+                        </div>
+                        <button class="compact-button" type="button" id="refresh-admin">Refresh</button>
+                    </div>
+                    <div class="card-grid four" id="admin-counts"></div>
+                    <div class="dashboard-grid">
+                        <section><h3>Users</h3><div class="history-list" id="admin-users"></div></section>
+                        <section><h3>Uploaded Resumes</h3><div class="history-list" id="admin-uploads"></div></section>
+                    </div>
+                </section>
+            </section>
+            {% endif %}
+            {% endif %}
+        </main>
+    </div>
+    {% endif %}
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

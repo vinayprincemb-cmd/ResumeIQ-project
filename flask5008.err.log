@@ -1,0 +1,11 @@
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5008
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [20/Jul/2026 10:58:49] "[32mGET /logout HTTP/1.1[0m" 302 -
+INFO:werkzeug:127.0.0.1 - - [20/Jul/2026 10:58:49] "GET /login HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [20/Jul/2026 10:58:49] "GET /static/style.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [20/Jul/2026 10:58:49] "GET /static/script.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [20/Jul/2026 10:58:49] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [20/Jul/2026 10:58:51] "GET /login HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [20/Jul/2026 10:58:51] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [20/Jul/2026 10:58:51] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
